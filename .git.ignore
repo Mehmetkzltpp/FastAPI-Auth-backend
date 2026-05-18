@@ -1,0 +1,11 @@
+# Ignore the local database file
+users.db
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Ignore virtual environments if you used one
+venv/
+.venv/
