@@ -66,6 +66,31 @@ def get_current_user(authorization: str = Header(None), db: Session = Depends(ge
 
     return user
 
-@app.get("/users/me", response_model=schemas.UserResponse)
-def read_users_me(current_user: models.User = Depends(get_current_user)):
-    return current_user
+
+@app.post("/posts/{post_id}/tags", response_model=schemas.PostResponseWithTags)
+def add_tag_to_post(post_id: int, tag_name: str, db: Session = Depends(get_db),
+                    current_user: models.User = Depends(get_current_user)):
+
+    post = db.query(models.Post).filter(models.Post.id == post_id, models.Post.owner_id == current_user.id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found or unauthorized")
+
+
+    clean_name = tag_name.lower().strip().replace("#", "")
+
+
+    tag = db.query(models.Tag).filter(models.Tag.name == clean_name).first()
+    if not tag:
+
+        tag = models.Tag(name=clean_name)
+        db.add(tag)
+        db.commit()
+        db.refresh(tag)
+
+
+    if tag not in post.tags:
+        post.tags.append(tag)
+        db.commit()
+        db.refresh(post)
+
+    return post
